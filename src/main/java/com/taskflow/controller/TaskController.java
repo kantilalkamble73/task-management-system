@@ -1,4 +1,5 @@
 package com.taskflow.controller;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,11 +15,51 @@ import com.taskflow.entity.Task;
 import com.taskflow.repository.TaskRepository;
 
 import jakarta.validation.Valid;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 @Controller
 public class TaskController {
 
     @Autowired
     private TaskRepository taskRepository;
+    @GetMapping("/filter")
+    public String filterTasks(@RequestParam String status, Model model) {
+
+        List<Task> filteredTasks = taskRepository.findByStatus(status);
+
+        model.addAttribute("tasks", filteredTasks);
+
+        model.addAttribute("totalTasks", filteredTasks.size());
+
+        model.addAttribute("pendingTasks",
+                filteredTasks.stream()
+                        .filter(task -> task.getStatus().equals("Pending"))
+                        .count());
+
+        model.addAttribute("completedTasks",
+                filteredTasks.stream()
+                        .filter(task -> task.getStatus().equals("Completed"))
+                        .count());
+
+        model.addAttribute("highPriorityTasks",
+                filteredTasks.stream()
+                        .filter(task -> task.getPriority().equals("High"))
+                        .count());
+
+        return "index";
+    }
+    
     @GetMapping("/search")
     public String searchTask(@RequestParam("keyword") String keyword,
                              Model model) {
@@ -127,5 +168,77 @@ public String updateTask(@PathVariable Long id,
             "Task Updated Successfully!");
 
     return "redirect:/";
+}
+@GetMapping("/download/pdf")
+public ResponseEntity<InputStreamResource> downloadPdf() {
+
+    List<Task> tasks = taskRepository.findAll();
+
+    Document document = new Document();
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+    try {
+
+        PdfWriter.getInstance(document, out);
+
+        document.open();
+
+        document.add(new Paragraph("TASK MANAGEMENT SYSTEM"));
+        document.add(new Paragraph(" "));
+
+        for(Task task : tasks) {
+
+            document.add(new Paragraph(
+                    "ID: " + task.getId()
+            ));
+
+            document.add(new Paragraph(
+                    "Title: " + task.getTitle()
+            ));
+
+            document.add(new Paragraph(
+                    "Description: " + task.getDescription()
+            ));
+
+            document.add(new Paragraph(
+                    "Status: " + task.getStatus()
+            ));
+
+            document.add(new Paragraph(
+                    "Priority: " + task.getPriority()
+            ));
+
+            document.add(new Paragraph(
+                    "Due Date: " + task.getDueDate()
+            ));
+
+            document.add(new Paragraph(
+                    "-----------------------------"
+            ));
+
+        }
+
+        document.close();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+
+    }
+
+    ByteArrayInputStream bis =
+            new ByteArrayInputStream(out.toByteArray());
+
+    HttpHeaders headers = new HttpHeaders();
+
+    headers.add("Content-Disposition",
+            "inline; filename=tasks.pdf");
+
+    return ResponseEntity
+            .ok()
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(new InputStreamResource(bis));
 }
 }

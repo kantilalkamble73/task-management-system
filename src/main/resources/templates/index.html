@@ -41,25 +41,61 @@
 
 	</div>
 
-    <!-- Search Bar -->
-    <form th:action="@{/search}" method="get" class="mb-4">
+	<!-- Search + Filter -->
+	<div class="row mb-4">
 
-        <div class="input-group">
+	    <!-- Search -->
+	    <div class="col-md-8">
 
-            <input type="text"
-                   name="keyword"
-                   class="form-control"
-                   placeholder="Search task by title...">
+	        <form th:action="@{/search}" method="get">
 
-            <button class="btn btn-dark" type="submit">
-                Search
-            </button>
+	            <div class="input-group">
 
-        </div>
+	                <input type="text"
+	                       name="keyword"
+	                       class="form-control"
+	                       placeholder="Search by titles...">
 
-    </form>
-	
-	</form>
+	                <button class="btn btn-dark" type="submit">
+	                    Search
+	                </button>
+
+	            </div>
+
+	        </form>
+
+	    </div>
+
+	    <!-- Status Filter -->
+	    <div class="col-md-4">
+
+	        <form th:action="@{/filter}" method="get">
+
+	            <div class="input-group">
+
+	                <select name="status" class="form-select">
+
+	                    <option value="">Filter By Status</option>
+
+	                    <option value="Pending">Pending</option>
+
+	                    <option value="In Progress">In Progress</option>
+
+	                    <option value="Completed">Completed</option>
+
+	                </select>
+
+	                <button class="btn btn-primary" type="submit">
+	                    Filter
+	                </button>
+
+	            </div>
+
+	        </form>
+
+	    </div>
+
+	</div>
     <!-- Dashboard Cards -->
     <div class="row mb-4">
 
@@ -152,6 +188,13 @@
         Add Task
     </a>
 
+	<a href="/download/pdf"
+	   class="btn btn-success mb-3">
+
+	    Download PDF
+
+	</a>
+	
     <!-- Table -->
     <div class="table-responsive">
 
